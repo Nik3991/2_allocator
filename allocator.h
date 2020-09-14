@@ -3,6 +3,7 @@
 
 #include <stddef.h>
 #include <memory>
+#include <new>
 
 #ifdef WIN32
 #include <iostream>
