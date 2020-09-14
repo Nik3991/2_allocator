@@ -7,8 +7,9 @@
 
 #ifdef WIN32
 #include <iostream>
-using namespace std;
 #endif
+
+using namespace std;
 
 template <typename T, int S>
 class user_allocator
