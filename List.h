@@ -17,10 +17,34 @@ class List
     };
 
     typename Alloc::template rebind<Node<T>>::other alloc;
+
     Node<T>* m_head = nullptr;
     Node<T>* m_tail = nullptr;
 
 public:
+    struct iterator
+    {
+        iterator() = default;
+        iterator(Node<T>* _node) : m_node(_node) {}
+        Node<T>* m_node;
+
+        Node<T>* operator++()
+        {
+            m_node = m_node->m_next;
+            return m_node;
+        }
+
+        Node<T>* operator->()
+        {
+            return m_node;
+        }
+
+        bool operator!=(iterator& _iterator)
+        {
+            return m_node != _iterator.m_node;
+        }
+    };
+
     List(T value)
     {
         m_head = alloc.allocate(1);
@@ -33,6 +57,16 @@ public:
         m_tail->m_next = alloc.allocate(1);
         alloc.construct(m_tail->m_next, std::move(value));
         m_tail = m_tail->m_next;
+    }
+
+    const iterator begin()
+    {
+        return m_head;
+    }
+
+    const iterator end()
+    {
+        return m_tail->m_next;
     }
 
     ~List()
