@@ -1,20 +1,14 @@
 #ifndef ALLOCATOR_H
 #define ALLOCATOR_H
 
-#include <stddef.h>
 #include <memory>
 #include <new>
 
-// section for debug
-// {
-        #undef WIN32
-        #ifdef WIN32
-        #include <iostream>
-        #endif
-// }
+#include <iostream>
+
 using namespace std;
 
-template <typename T, int S = 10>
+template <typename T, int Size = 10>
 class user_allocator
 {
 public:
@@ -27,7 +21,7 @@ public:
     template <typename U>
     struct rebind
     {
-        using other = user_allocator<U, S>;
+        using other = user_allocator<U, Size>;
     };
 
     template <typename U>
@@ -37,31 +31,24 @@ public:
 
     T* allocate(size_t _n)
     {
-        #ifdef WIN32
-        cout << __PRETTY_FUNCTION__ << endl;
-        #endif
-
         (void)_n;
+
+        if (!m_free)
+            throw bad_alloc();
 
         if (!m_data)
         {
             m_data = reinterpret_cast<T*>(malloc(sizeof(T) * m_free));
-        } else {
-            ++m_data;
-            --m_free;
-            if (!m_free)
-                throw bad_alloc();
         }
 
-        return m_data;
+        T* ret_ptr = m_data + (Size - m_free);
+        --m_free;
+
+        return ret_ptr;
     }
 
     void deallocate(T* _ptr, size_t _n)
     {
-        #ifdef WIN32
-        cout << __PRETTY_FUNCTION__ << endl;
-        #endif
-
         (void)_n;
         (void)_ptr;
 
@@ -71,19 +58,11 @@ public:
     template <typename ...Args>
     void construct(T* _ptr, Args ...args)
     {
-        #ifdef WIN32
-        cout << __PRETTY_FUNCTION__ << endl;
-        #endif
-
         new (_ptr) T(std::forward<Args...>(args...));
     }
 
     void destroy(T* _ptr)
     {
-        #ifdef WIN32
-        cout << __PRETTY_FUNCTION__ << endl;
-        #endif
-
         (void)_ptr;
 
         _ptr->~T();
@@ -91,12 +70,12 @@ public:
 
     ~user_allocator()
     {
-        delete [] (m_data - (S - m_free));
+        delete m_data;
     }
 
 private:
-    T* m_data   = nullptr;
-    int m_free = S;
+    T* m_data  = nullptr;
+    int m_free = Size;
 };
 
 #endif // ALLOCATOR_H
